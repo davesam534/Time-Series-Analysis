@@ -9,27 +9,21 @@ train_sample <- setDT(train)[store == 2 & item == 1]
 ## Create a daily Date object - helps my work on dates
 inds <- seq(as.Date(min(train_sample$date)), as.Date(max(train_sample$date)), by = "day")
 ## Create a time series object
-
 set.seed(25)
 myts<-ts(train_sample[,c(sales)],start = c(2013),end=c(2018),frequency = 365)
-
 autoplot(myts)
 ggseasonplot(myts,polar = T)
 plot(decompose(myts))
-##Weekly Sample
 
+##Weekly Sample
 weeklyTS<-ts(train_sample[,c(sales)],start = c(2013),end=c(2018),frequency = 52)
 ggseasonplot(weeklyTS)
 
-
 ##
 ggAcf(myts)
-
 plot(density(train_sample$sales))
 
 ####Forecasting
-
-
 #Naive
 Naive<-naive(myts,h=90)
 autoplot(Naive)
@@ -41,10 +35,6 @@ checkresiduals(expsm)
 
 ####
 train1 <- subset(myts, end = length(myts) - 365)
-
-
-
-
 expsm<-ses(train1,h=365)
 Naive<-naive(train1,h=365)
 
@@ -52,14 +42,9 @@ Naive<-naive(train1,h=365)
 accuracy(expsm,myts)
 accuracy(Naive,myts)
 
-
-
-
 ##holts method
 holt<-holt(myts,h=90)
 autoplot(holt)
-
-
 
 ##winter's method
 holtwinter <- hw(myts,seasonal = 'multiplicative')
@@ -74,7 +59,6 @@ autoplot(etsmodel)
 
 etsforecast<-forecast(etsmodel,h=365)
 etsforecast$fitted
-
 
 ####stlfit
 stlfit<-stlf(train1,method='ets')
@@ -95,21 +79,16 @@ plot(decompose(myts))
 myts %>% stl(s.window = 5) %>% autoplot
 
 
-Comparing
+#Comparing
 train_sample$index<-1:nrow(train_sample)
 testcheck<-cbind(subset(train_sample,index>1461),stlfit$fitted)
 
 
 ###train sample probability
 train_prob<-train_sample[,c('date','sales')]
-
 train_prob<-subset(train_prob,date<as.Date('2017-01-01'))
-
-
-
 train_prob$ratio<-train_prob$sales/mean(train_prob$sales)
 
-?cut
 train_prob
 library(data.table)
 r<-train_prob$sales
@@ -120,6 +99,7 @@ ratiots<-ts(e[,c('Range')],start = c(2013),end=c(2017),frequency = 365)
 grid.arrange(autoplot(sfvf),autoplot(train1))
 table(e$Range)
 
+#Markov Chain Analysis Assuming the Markov Chain Property
 library(depmixS4)
 library(seqHMM)
 library(Rsolnp)
@@ -135,18 +115,12 @@ plot(mcx,edge.arrow.size=0.1)
 summary(mcx)
 mcx
 
-
-
-
-
 x <- e$Range
 p <- matrix(nrow = 12, ncol = 12, 0)
 for (t in 1:(length(x) - 1)) p[x[t], x[t + 1]] <- p[x[t], x[t + 1]] + 1
 for (i in 1:12) p[i, ] <- p[i, ] / sum(p[i, ])
 p
 
-
-write.csv(p,'p.csv')
 
 myseq<-e$Range
 mat<-createSequenceMatrix(myseq)
@@ -197,11 +171,8 @@ p
 
 write.csv(p,'pq.csv')
 
-####bay
-
+####bayesian structural time series analysis
 library(bsts)
-
-
 ss<-AddLocalLinearTrend(list(),train1)
 ss<-AddSeasonal(ss,train1,nseasons = 52,season.duration = 7)
 bsts.model<-bsts(train1,state.specification = ss,niter=1000)
@@ -213,32 +184,17 @@ pred<-predict.bsts(bsts.model,horizon = 366,burn=burn)
 
 
 Predicted<-pred$mean
-
-
 bsts.model$final.state
-
-
-
 test<-window(myts,start=c(2017),end=c(2018))
-
 residual<-Predicted-as.numeric(test)
 residual
-
 RMSE<-sqrt(mean(residual)^2)
 RMSE
 
-
-
-
 ###stlf
-
 accuracy(stlfforecast)
-
-
 ####store
-
 weeks<-seq.Date(from=as.Date('2010-02-05'),to=as.Date('2012-10-26'),by='week')
-
 storets<-ts(storeiitem1[,'Weekly_Sales'],start=c(2010,02,05),frequency = 49)
 
 
@@ -281,7 +237,3 @@ residuals<-Predicted-dd[94:143]
 
 sqrt(mean(residuals)^2)
 MAPE(Predicted,dd[94:143])
-
-
-
-
