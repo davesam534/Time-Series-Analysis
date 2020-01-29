@@ -4,8 +4,10 @@ library(gtools)
 library(MLmetrics)
 library(gridExtra)
 library(forecast)
-remove(wtrain_sample)
+
+
 train_sample <- setDT(train)[store == 2 & item == 1]
+
 ## Create a daily Date object - helps my work on dates
 inds <- seq(as.Date(min(train_sample$date)), as.Date(max(train_sample$date)), by = "day")
 ## Create a time series object
